@@ -33,6 +33,21 @@ TraceKit.report.subscribe JSExceptionNotifierLogger = (errorReport) ->
     return if window.errorCount > 5
     window.errorCount += 1
 
+    # Provide some context for debugging
+    # Adapted from http://stackoverflow.com/a/11616993/366476
+    target = APP.models
+    cache = []
+    errorReport.context = JSON.stringify(target, (key, value) ->
+      if typeof value == 'object' && value != null
+        if cache.indexOf(value) != -1
+          # Circular reference found, discard key
+          return
+        # Store value in our collection
+        cache.push(value)
+      value
+    )
+    cache = null # Enable garbage collection
+
     $.ajax
       url: '/js_exception_notifier'
       headers: {
